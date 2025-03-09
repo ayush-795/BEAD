@@ -1,6 +1,6 @@
 [project]
 name = "bead"
-version = "0.1.0"
+version = "0.5.0"
 description = "Background Enrichment based Anomaly Detection in HEP data"
 authors = [
     {name = "Pratik Jawahar"}
