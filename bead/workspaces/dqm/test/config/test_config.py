@@ -18,7 +18,7 @@ def set_config(c):
     c.model_init                   = "xavier"
     c.loss_function                = "VAEFlowLoss"
     c.optimizer                    = "adamw"
-    c.epochs                       = 2
+    c.epochs                       = 4
     c.lr                           = 0.001
     c.batch_size                   = 2
     c.early_stopping               = True
@@ -30,12 +30,12 @@ def set_config(c):
 
 # === Additional configuration options ===
 
-    c.early_stopping_patience      = 100
+    c.early_stopping_patience      = 1
     c.min_delta                    = 0
-    c.lr_scheduler_patience        = 50
+    c.lr_scheduler_patience        = 1
     c.reg_param                    = 0.001
-    c.intermittent_model_saving    = False
-    c.intermittent_saving_patience = 100
+    c.intermittent_model_saving    = True
+    c.intermittent_saving_patience = 2
     c.activation_extraction        = False
     c.deterministic_algorithm      = False
     c.separate_model_saving        = False

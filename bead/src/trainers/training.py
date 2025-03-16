@@ -408,6 +408,14 @@ def train(
             optimizer=optimizer, patience=config.lr_scheduler_patience
         )
 
+    # Activate intermittent model saving
+    if config.intermittent_model_saving:
+        if verbose:
+            print(
+                "Intermittent model saving is activated with patience of ",
+                config.intermittent_saving_patience,
+            )
+
     # Training and Validation of the model
     train_loss_data = []
     val_loss_data = []
@@ -460,7 +468,7 @@ def train(
         if config.intermittent_model_saving:
             if epoch % config.intermittent_saving_patience == 0:
                 path = os.path.join(output_path, "models", f"model_{epoch}.pt")
-                helper.model_saver(model, path)
+                helper.save_model(model, path)
 
         # Implementing Early Stopping
         if config.early_stopping:
