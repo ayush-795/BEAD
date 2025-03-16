@@ -30,7 +30,7 @@ def set_config(c):
 
 # === Additional configuration options ===
 
-    c.early_stopping_patience      = 1
+    c.early_stopping_patience      = 50
     c.min_delta                    = 0
     c.lr_scheduler_patience        = 1
     c.reg_param                    = 0.001

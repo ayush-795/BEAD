@@ -188,7 +188,6 @@ def set_config(c):
     c.project_name                 = "{project_name}"
     c.file_type                    = "h5"
     c.parallel_workers             = 4
-    c.chunk_size                   = 10000
     c.num_jets                     = 3
     c.num_constits                 = 15
     c.latent_space_size            = 15
@@ -323,7 +322,6 @@ def convert_csv(paths, config, verbose: bool = False):
                     output_prefix=output_prefix,
                     out_path=output_path,
                     file_type=config.file_type,
-                    chunk_size=config.chunk_size,
                     n_workers=config.parallel_workers,
                     verbose=verbose,
                 )
@@ -391,7 +389,7 @@ def prepare_inputs(paths, config, verbose: bool = False):
         # Check if no HDF5 files were found
         if files_not_found:
             print(
-                f"Error: No {config.file_type} files found in the directory '{input_path}'. Run --mode=convert_csv first."
+                f"Error: No {config.file_type} files found in the directory '{input_path}'."
             )
             sys.exit()
 
@@ -402,32 +400,27 @@ def prepare_inputs(paths, config, verbose: bool = False):
 
     for keyword in keywords:
         try:
-            events_tensor, jets_tensor, constituents_tensor = (
-                helper.load_augment_tensors(in_path, keyword)
+            events_tensor, jets_tensor, constituents_tensor = helper.load_augment_tensors(
+                in_path, keyword
             )
             if verbose:
-                print(f"Data augmented successfully for {keyword} files")
+                print("Data augmented successfully")
                 print("Events tensor shape:", events_tensor.shape)
                 print("Jets tensor shape:", jets_tensor.shape)
                 print("Constituents tensor shape:", constituents_tensor.shape)
             if keyword == "bkg_train":
                 torch.save(events_tensor, out_path + f"/bkg_train_events.pt")
                 torch.save(jets_tensor, out_path + f"/bkg_train_jets.pt")
-                torch.save(
-                    constituents_tensor, out_path + f"/bkg_train_constituents.pt"
-                )
+                torch.save(constituents_tensor, out_path + f"/bkg_train_constituents.pt")
             elif keyword == "bkg_test":
                 torch.save(events_tensor, out_path + f"/bkg_test_genLabeled_events.pt")
                 torch.save(jets_tensor, out_path + f"/bkg_test_genLabeled_jets.pt")
-                torch.save(
-                    constituents_tensor,
-                    out_path + f"/bkg_test_genLabeled_constituents.pt",
-                )
+                torch.save(constituents_tensor, out_path + f"/bkg_test_genLabeled_constituents.pt")
 
         except ValueError as e:
             print(e)
             sys.exit(1)
-
+    
     keyword = "sig_test"
     try:
         events_tensor, jets_tensor, constituents_tensor = helper.load_tensors(
@@ -443,6 +436,7 @@ def prepare_inputs(paths, config, verbose: bool = False):
         torch.save(constituents_tensor, out_path + f"/sig_test_constituents.pt")
     except ValueError as e:
         print(e)
+        sys.exit(1)
 
     end = time.time()
 
