@@ -1060,3 +1060,48 @@ class TransformerAE(nn.Module):
         z = self.encoder(x)
         x = self.decoder(z)
         return x, z, z, z, z, z
+
+class SimplifiedPlanarConvVAE(ConvVAE):
+    """
+    Simplified VAE with Planar Flows in the Decoder
+    Maintains original return signature
+    """
+
+    def __init__(self, in_shape, z_dim, num_flows=4, *args, **kwargs):
+        super().__init__(in_shape, z_dim, *args, **kwargs)
+        self.num_flows = num_flows
+        self.flows = nn.ModuleList([flows.Planar() for _ in range(num_flows)])
+        param_dim = num_flows * (self.z_size + self.z_size + 1)
+        self.param_fc = nn.Linear(self.q_z_mid_dim, param_dim)
+
+    def _get_flow_params(self, out, batch_size):
+        params = self.param_fc(out)
+        params = params.view(batch_size, self.num_flows, 2*self.z_size + 1)
+        return (
+            params[..., :self.z_size].unsqueeze(-1),
+            params[..., self.z_size:2*self.z_size].unsqueeze(-2),
+            params[..., -1:].unsqueeze(-1)
+        )
+
+    def forward(self, x):
+        out, z_mu, z_var = self.encode(x)
+        batch_size = x.size(0)
+        u, w, b = self._get_flow_params(out, batch_size)
+
+        z = [self.reparameterize(z_mu, z_var)]
+        log_det_j = 0
+
+        for k in range(self.num_flows):
+            z_k, jacob = self.flows[k](z[k], u[:, k], w[:, k], b[:, k])
+            z.append(z_k)
+            log_det_j += jacob
+
+        # Maintain original return signature with all 6 values
+        return (
+            self.decode(z[-1]),  # x_decoded
+            z_mu,                # mu
+            z_var,               # var
+            log_det_j,           # log det jacobian
+            z[0],                # initial z
+            z[-1]                # final z
+        )
